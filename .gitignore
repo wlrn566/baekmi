@@ -1,0 +1,11 @@
+# NestJS
+baekmi_api/node_modules
+baekmi_api/dist
+baekmi_api/.env
+baekmi_api/generated
+
+# Flutter
+baekmi_app/.dart_tool
+baekmi_app/build
+baekmi_app/.flutter-plugins
+baekmi_app/.flutter-plugins-dependencies
