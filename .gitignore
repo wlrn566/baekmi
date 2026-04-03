@@ -1,3 +1,6 @@
+# Environment
+.env
+
 # NestJS
 baekmi_api/node_modules
 baekmi_api/dist
