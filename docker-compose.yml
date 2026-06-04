@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: baekmi_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: baekmi_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: baekmi_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  api:
+    build:
+      context: ./baekmi_api
+      dockerfile: Dockerfile.dev
+    container_name: baekmi_api
+    restart: unless-stopped
+    ports:
+      - "4001:${PORT}"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      WATCHPACK_POLLING: "true"
+      TSC_WATCHFILE: UsePolling
+    volumes: # 코드 동기화 설정
+      - ./baekmi_api:/app # 로컬 코드 → 컨테이너 동기화
+      - /app/node_modules # node_modules는 컨테이너 내부에서 관리
+    # volume이 설정되어 있기 때문에, /app자체를 덮어쓰게 됨.
+    # Dockerfile.dev에서 이미 생성된 Prisma Client가 사라지므로,
+    # 컨테이너 시작 시마다 Prisma Client를 생성하도록 command를 수정
+    command: >
+      sh -c "npm install && npm run prisma:generate && npm run start:dev"
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:

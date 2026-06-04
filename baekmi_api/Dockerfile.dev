@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# prisma 포함 먼저 복사
+COPY package*.json ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
+
+RUN npm install
+
+# Prisma Client 생성
+RUN npx prisma generate
+
+# 나머지 소스
+COPY . .
+
+EXPOSE 4000
+
+CMD ["npm", "run", "start:dev"]
