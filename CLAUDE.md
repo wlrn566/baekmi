@@ -100,6 +100,12 @@ baekmi_app/
 ### 실행 전 사전 조건
 
 루트에 `.env` 파일이 있어야 한다. 없으면 환경변수가 비어 컨테이너가 정상 기동되지 않는다.
+`.env`는 git에 올라가지 않으므로 새 PC나 새 환경에서 클론했을 때는 직접 생성해야 한다.
+`.env.example`을 복사해서 값을 채워 사용한다.
+
+```bash
+cp .env.example .env
+```
 
 필요한 환경변수:
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
