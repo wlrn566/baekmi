@@ -46,6 +46,21 @@ infra: api 컨테이너 핫리로드 설정 추가
 chore(api): prisma 버전 업데이트
 ```
 
+## 브랜치 네이밍
+
+```
+<type>/<scope>-<subject>
+```
+
+```
+feat/api-location-save
+fix/app-gps-crash
+chore/infra-docker-hotreload
+docs/commit-convention
+```
+
+---
+
 ## 규칙
 
 - `subject`는 현재 시제로 작성 (과거형 X)

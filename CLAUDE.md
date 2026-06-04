@@ -121,6 +121,15 @@ baekmi_app/
 
 ---
 
+## 워크플로우
+
+1. 작업 브랜치 생성 (`feat/api-location-save`, `fix/app-gps-crash` 등)
+2. 작업 후 커밋 (커밋 컨벤션 준수)
+
+브랜치 네이밍 및 커밋 컨벤션 → [docs/commit-convention.md](./docs/commit-convention.md)
+
+---
+
 ## Docs
 
 ### 커밋 컨벤션
