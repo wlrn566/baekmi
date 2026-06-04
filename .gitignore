@@ -14,7 +14,33 @@ baekmi_api/generated
 baekmi_api/*.tsbuildinfo
 
 # Flutter
-baekmi_app/.dart_tool
-baekmi_app/build
+baekmi_app/.idea/
 baekmi_app/.flutter-plugins
+baekmi_app/*.class
+baekmi_app/*.log
+baekmi_app/*.pyc
+baekmi_app/*.swp
+baekmi_app/.DS_Store
+baekmi_app/.atom/
+baekmi_app/.build/
+baekmi_app/.buildlog/
+baekmi_app/.history
+baekmi_app/.svn/
+baekmi_app/.swiftpm/
+baekmi_app/migrate_working_dir/
+baekmi_app/*.iml
+baekmi_app/*.ipr
+baekmi_app/*.iws
+baekmi_app/**/doc/api/
+baekmi_app/**/ios/Flutter/.last_build_id
+baekmi_app/.dart_tool/
 baekmi_app/.flutter-plugins-dependencies
+baekmi_app/.pub-cache/
+baekmi_app/.pub/
+baekmi_app/build/
+baekmi_app/coverage/
+baekmi_app/app.*.symbols
+baekmi_app/app.*.map.json
+baekmi_app/android/app/debug
+baekmi_app/android/app/profile
+baekmi_app/android/app/release

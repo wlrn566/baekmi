@@ -117,4 +117,4 @@ GEOSEARCH user:location BYRADIUS 100 m FROM MEMBER "user_1" WITHDIST
 
 ## 관련 문서
 
-- [이슈 & 해결책](./ISSUES.md)
+- [이슈 & 해결책](./docs/issues/README.md)
