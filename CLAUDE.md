@@ -71,7 +71,11 @@ baekmi_api/
 
 ## App — `baekmi_app`
 
-**스택:** Flutter 3.44.0 · Dart 3.12.0 · geolocator
+**스택:** Flutter 3.44.0 · Dart 3.12.0 · flutter_naver_map · flutter_dotenv
+
+### 주요 기능
+
+- **지도**: `flutter_naver_map` 사용. 자세한 연동 방법 → [docs/flutter-naver-map.md](./docs/flutter-naver-map.md)
 
 ### 실행
 
