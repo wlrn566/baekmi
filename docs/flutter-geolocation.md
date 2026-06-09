@@ -29,8 +29,8 @@
 
 `android/app/src/main/AndroidManifest.xml`에 추가:
 
-- `ACCESS_FINE_LOCATION` — GPS 기반 정밀 위치 (100m 이내 서비스에 필요)
-- `ACCESS_COARSE_LOCATION` — 네트워크 기반 대략적 위치
+- `ACCESS_FINE_LOCATION` — GPS 기반 정밀 위치 (수 m~수십 m 수준, 100m 이내 서비스에 필요)
+- `ACCESS_COARSE_LOCATION` — 네트워크/Wi-Fi 기반 대략적 위치 (수백 m~수 km 수준)
 
 ---
 

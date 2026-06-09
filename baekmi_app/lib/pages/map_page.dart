@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -34,7 +35,9 @@ class _MapPageState extends State<MapPage> {
 
   /// 권한 확인 → 현재 위치로 카메라 이동 → 실시간 추적 시작 순으로 초기화한다.
   /// 각 await 이후 mounted를 확인해 dispose된 위젯에 접근하는 것을 방지한다.
+  /// iOS는 Info.plist 설정이 없어 위치 기능 미지원 — Android에서만 실행한다.
   Future<void> _initLocation() async {
+    if (!Platform.isAndroid) return;
     try {
       await LocationService.ensurePermission();
       if (!mounted) return;
