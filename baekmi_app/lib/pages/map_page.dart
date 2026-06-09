@@ -23,6 +23,9 @@ class _MapPageState extends State<MapPage> {
   // dispose 시 명시적으로 cancel 해야 메모리 누수 및 불필요한 이벤트 처리를 막을 수 있음
   StreamSubscription<Position>? _positionSubscription;
 
+  // onMapReady 이전에 위치를 수신한 경우 지도 준비 후 적용하기 위해 버퍼링
+  Position? _pendingPosition;
+
   @override
   void initState() {
     super.initState();
@@ -30,32 +33,42 @@ class _MapPageState extends State<MapPage> {
   }
 
   /// 권한 확인 → 현재 위치로 카메라 이동 → 실시간 추적 시작 순으로 초기화한다.
-  /// 지도가 준비되기 전에 위치를 받아도 _mapController가 null이면 카메라 이동이 무시되므로
-  /// onMapReady 이후 _moveCamera가 호출될 수 있도록 비동기로 처리한다.
+  /// 각 await 이후 mounted를 확인해 dispose된 위젯에 접근하는 것을 방지한다.
   Future<void> _initLocation() async {
     try {
       await LocationService.ensurePermission();
+      if (!mounted) return;
 
       // 초기 카메라 위치 설정을 위해 현재 위치를 1회 조회
       final position = await LocationService.getCurrentPosition();
+      if (!mounted) return;
       _moveCamera(position);
 
       // 이후 이동 시 지도 카메라가 따라오도록 스트림 구독
-      _positionSubscription = LocationService.getPositionStream().listen(_moveCamera);
+      _positionSubscription =
+          LocationService.getPositionStream().listen(_moveCamera);
     } catch (e) {
       // 권한 거부, 위치 서비스 비활성화 등 사용자 조치가 필요한 경우 메시지로 안내
+      // e.toString()은 "Exception: ..." 형태이므로 프리픽스를 제거해 사용자에게 노출
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+          ),
         );
       }
     }
   }
 
   /// 주어진 위치로 지도 카메라를 이동하고 위치 오버레이를 갱신한다.
-  /// _mapController가 null이면 (지도 아직 초기화 중) 아무것도 하지 않는다.
+  /// onMapReady 이전에 호출된 경우 _pendingPosition에 버퍼링해 준비 후 적용한다.
   void _moveCamera(Position position) {
-    final target = NLatLng(position.latitude, position.longitude);
+    if (_mapController == null) {
+      _pendingPosition = position;
+      return;
+    }
+
+    final NLatLng target = NLatLng(position.latitude, position.longitude);
 
     _mapController?.updateCamera(
       NCameraUpdate.scrollAndZoomTo(target: target, zoom: 16),
@@ -85,10 +98,15 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
         // 지도 준비 완료 후 컨트롤러 저장, 위치 오버레이를 꺼내 표시 상태로 설정
+        // 버퍼링된 위치가 있으면 즉시 적용
         onMapReady: (controller) {
           _mapController = controller;
           _locationOverlay = controller.getLocationOverlay()
             ..setIsVisible(true);
+          if (_pendingPosition != null) {
+            _moveCamera(_pendingPosition!);
+            _pendingPosition = null;
+          }
         },
       ),
     );

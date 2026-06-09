@@ -5,7 +5,7 @@
 - [geolocator](https://pub.dev/packages/geolocator) ^14.0.2
 
 **요구사항**
-- Android: minSdk 23 이상 (이미 충족)
+- Android: minSdk 23 이상 (`android/app/build.gradle.kts`에서 `minSdk = 23` 명시 필요)
 - iOS: 추후 지원 예정
 
 > 현재 Android 전용으로 구현하며 iOS 설정은 추후 진행 예정이다.
