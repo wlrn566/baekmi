@@ -66,3 +66,4 @@ docs/commit-convention
 - `subject`는 현재 시제로 작성 (과거형 X)
 - `subject` 끝에 마침표 X
 - `body`는 어떤 작업을 했는지 간단히 목록으로 작성 (필수)
+- AI 도구(Claude 등) 관련 내용은 커밋 메시지에 절대 포함하지 않는다 (`Co-Authored-By` 포함)
