@@ -71,11 +71,12 @@ baekmi_api/
 
 ## App — `baekmi_app`
 
-**스택:** Flutter 3.44.0 · Dart 3.12.0 · flutter_naver_map · flutter_dotenv
+**스택:** Flutter 3.44.0 · Dart 3.12.0 · flutter_naver_map · flutter_dotenv · geolocator
 
 ### 주요 기능
 
 - **지도**: `flutter_naver_map` 사용. 자세한 연동 방법 → [docs/flutter-naver-map.md](./docs/flutter-naver-map.md)
+- **위치**: `geolocator` 사용. 자세한 구현 방법 → [docs/flutter-geolocation.md](./docs/flutter-geolocation.md)
 
 ### 실행
 
@@ -83,6 +84,10 @@ baekmi_api/
 cd baekmi_app
 flutter run
 ```
+
+### 코드 컨벤션
+
+- `var` 키워드 사용 금지 — `final`/`const`의 타입 추론은 허용, 재할당 가능한 변수는 명시적 타입 선언
 
 ### 디렉토리 구조
 
