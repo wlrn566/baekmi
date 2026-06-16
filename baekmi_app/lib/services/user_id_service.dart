@@ -12,9 +12,17 @@ class UserIdService {
   // 디스크에서 다시 읽지 않도록 한 번 읽은 값을 메모리에 캐시한다.
   static String? _cachedUserId;
 
-  static Future<String> getOrCreate() async {
-    if (_cachedUserId != null) return _cachedUserId!;
+  // _cachedUserId가 채워지기 전에 getOrCreate()가 짧은 간격으로 여러 번 호출되면
+  // (예: 위치 스트림 이벤트가 연달아 들어오는 경우) 각 호출이 따로 UUID를 생성/저장해
+  // 서로 다른 userId가 만들어질 수 있다. 진행 중인 Future를 캐시해 동시 호출을 하나로 합친다.
+  static Future<String>? _inFlight;
 
+  static Future<String> getOrCreate() {
+    if (_cachedUserId != null) return Future.value(_cachedUserId!);
+    return _inFlight ??= _load();
+  }
+
+  static Future<String> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getString(_key);
     if (existing != null) {

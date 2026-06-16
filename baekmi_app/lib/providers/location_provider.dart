@@ -25,6 +25,14 @@ class LocationProvider extends ChangeNotifier {
   /// iOS는 Info.plist 설정이 없어 위치 기능 미지원 — Android에서만 실행한다.
   Future<void> init() async {
     if (!Platform.isAndroid) return;
+
+    // init()이 여러 번 호출되는 경우(예: 화면 재진입) 기존 구독이 남아있으면
+    // 위치 스트림이 중복 구독되어 백엔드 전송도 중복된다. 새로 시작하기 전에 정리한다.
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    errorMessage = null;
+    _lastReportedAt = null;
+
     try {
       await LocationService.ensurePermission();
 
