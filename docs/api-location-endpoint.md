@@ -17,7 +17,7 @@
 "반경 100m 주변 사람 검색"은 결국 속도 때문에 Redis GEOSEARCH를 거치게 되므로, 이 `locations` 테이블은 그 조회 경로에는 쓰이지 않는다. 그럼에도 `POST /locations`가 Postgres에 upsert하는 동작은 그대로 유지하기로 했다.
 
 - 지금 구조(사용자별 최신 위치 1건 upsert)는 그대로 두되, **나중에 `unique` 제약을 없애고 append-only 이력 테이블로 확장할 수 있는 여지**를 남겨두기 위함이다.
-- Redis를 도입하더라도 별도 동기화(dual-write) 설계가 필요하며, 이 문서가 그 시점에 참고 자료가 된다.
+- Redis 도입 완료: `POST /locations`가 Postgres upsert와 Redis 갱신을 함께 수행한다(dual-write). 키 설계, 만료 전략 등 자세한 내용은 [docs/redis-location-store.md](./redis-location-store.md) 참고.
 
 ### 사용자 식별: 클라이언트 생성 UUID
 
