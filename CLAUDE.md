@@ -9,7 +9,10 @@ baekmi/
 ├── baekmi_api/       # NestJS 백엔드
 ├── baekmi_app/       # Flutter 앱
 ├── docs/
-│   ├── commit-convention.md  # 커밋 컨벤션
+│   ├── commit-convention.md       # 커밋 컨벤션
+│   ├── flutter-naver-map.md       # 네이버 지도 SDK 연동 가이드
+│   ├── flutter-geolocation.md     # 위치 조회/추적 구현 가이드
+│   ├── api-location-endpoint.md   # 위치 데이터 수신 API 설계
 │   └── issues/
 │       ├── README.md     # 이슈 인덱스 (분류별 목록)
 │       ├── TEMPLATE.md   # 이슈 파일 작성 템플릿
@@ -53,16 +56,22 @@ npm run prisma:generate
 npm run start:dev
 ```
 
+### 주요 기능
+
+- **위치 데이터 수신**: 앱이 보낸 좌표를 받아 PostgreSQL(Prisma)에 저장. 설계 결정 및 구현 구조 → [docs/api-location-endpoint.md](./docs/api-location-endpoint.md)
+
 ### 디렉토리 구조
 
 ```
 baekmi_api/
 ├── src/
 │   ├── prisma/       # PrismaModule, PrismaService
+│   ├── locations/    # 위치 데이터 수신 (LocationsModule/Controller/Service, dto)
 │   ├── app.module.ts
 │   └── main.ts
 ├── prisma/
-│   └── schema.prisma
+│   ├── schema.prisma
+│   └── migrations/
 ├── Dockerfile.dev
 └── package.json
 ```
@@ -94,7 +103,11 @@ flutter run
 ```
 baekmi_app/
 ├── lib/
-│   └── main.dart
+│   ├── main.dart
+│   ├── pages/
+│   │   └── map_page.dart
+│   └── services/
+│       └── location_service.dart
 ├── android/
 ├── ios/
 └── pubspec.yaml
