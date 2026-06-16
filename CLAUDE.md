@@ -158,6 +158,7 @@ cp .env.example .env
 1. 작업 브랜치 생성 (`feat/api-location-save`, `fix/app-gps-crash` 등)
 2. 커밋 전에 변경 사항과 관련된 `CLAUDE.md`/`docs/*.md`를 훑어보고 최신화한다 (디렉토리 구조, 주요 기능 설명, 설계 문서 등 코드와 어긋난 부분이 있는지 확인)
 3. 커밋 (커밋 컨벤션 준수)
+4. PR 생성 시 `.github/PULL_REQUEST_TEMPLATE.md` 형식을 그대로 따른다 (`gh pr create --body`로 임의 형식을 넘기지 말 것 — 템플릿이 무시된다)
 
 브랜치 네이밍 및 커밋 컨벤션 → [docs/commit-convention.md](./docs/commit-convention.md)
 
