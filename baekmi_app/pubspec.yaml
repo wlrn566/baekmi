@@ -37,6 +37,10 @@ dependencies:
   flutter_naver_map: ^1.4.4
   flutter_dotenv: ^6.0.1
   geolocator: ^14.0.2
+  dio: ^5.7.0
+  uuid: ^4.5.1
+  shared_preferences: ^2.3.3
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
