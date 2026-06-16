@@ -44,17 +44,19 @@ class LocationProvider extends ChangeNotifier {
     notifyListeners();
 
     // 같은 GPS 픽스(timestamp 동일)가 중복으로 들어온 경우 전송을 건너뛴다.
+    // geolocator의 Position.timestamp는 non-nullable(DateTime)이라 _lastReportedAt(초기값 null)과
+    // 같아질 수 없으므로 첫 호출에서는 항상 통과한다.
     if (newPosition.timestamp == _lastReportedAt) {
-      debugPrint('[LocationProvider] 중복 위치 이벤트 무시: ${newPosition.timestamp}');
+      if (kDebugMode) debugPrint('[LocationProvider] 중복 위치 이벤트 무시: ${newPosition.timestamp}');
       return;
     }
     _lastReportedAt = newPosition.timestamp;
 
     // 위치 전송은 백그라운드 동기화 성격이라 실패해도 지도 사용을 막지 않는다.
     // 권한 오류 같은 사용자 조치가 필요한 에러가 아니므로 errorMessage로 노출하지 않고 로그만 남긴다.
-    _locationRepository
-      .reportLocation(newPosition)
-      .catchError((e) => debugPrint('위치 전송 실패: $e'));
+    _locationRepository.reportLocation(newPosition).catchError((e) {
+      if (kDebugMode) debugPrint('위치 전송 실패: $e');
+    });
   }
 
   @override

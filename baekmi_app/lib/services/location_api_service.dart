@@ -9,9 +9,12 @@ import 'dio_client.dart';
 class LocationApiService {
   static Future<void> sendLocation(LocationPayload payload) async {
     final body = payload.toJson();
-    debugPrint('[LocationApiService] POST /locations 요청: $body');
+    // 좌표/userId가 포함된 로그라 릴리즈 빌드(디바이스 로그 등)에 남지 않도록 디버그 모드에서만 출력한다.
+    if (kDebugMode) debugPrint('[LocationApiService] POST /locations 요청: $body');
 
     final response = await DioClient.instance.post('/locations', data: body);
-    debugPrint('[LocationApiService] 응답(${response.statusCode}): ${response.data}');
+    if (kDebugMode) {
+      debugPrint('[LocationApiService] 응답(${response.statusCode}): ${response.data}');
+    }
   }
 }

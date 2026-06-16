@@ -8,17 +8,25 @@ import 'package:uuid/uuid.dart';
 class UserIdService {
   static const _key = 'user_id';
 
+  // userId는 프로세스 생애 동안 불변이므로, 위치 이벤트마다 매번 SharedPreferences를
+  // 디스크에서 다시 읽지 않도록 한 번 읽은 값을 메모리에 캐시한다.
+  static String? _cachedUserId;
+
   static Future<String> getOrCreate() async {
+    if (_cachedUserId != null) return _cachedUserId!;
+
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getString(_key);
     if (existing != null) {
-      debugPrint('[UserIdService] 기존 userId 사용: $existing');
+      if (kDebugMode) debugPrint('[UserIdService] 기존 userId 사용: $existing');
+      _cachedUserId = existing;
       return existing;
     }
 
     final newId = const Uuid().v4();
     await prefs.setString(_key, newId);
-    debugPrint('[UserIdService] 새 userId 생성: $newId');
+    if (kDebugMode) debugPrint('[UserIdService] 새 userId 생성: $newId');
+    _cachedUserId = newId;
     return newId;
   }
 }
