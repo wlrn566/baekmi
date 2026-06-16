@@ -14,6 +14,7 @@ baekmi/
 │   ├── flutter-geolocation.md     # 위치 조회/추적 구현 가이드
 │   ├── api-location-endpoint.md   # 위치 데이터 수신 API 설계
 │   ├── redis-location-store.md    # Redis 기반 위치 저장/조회 설계
+│   ├── app-location-sync.md       # 플러터 위치 데이터 연동 설계
 │   └── issues/
 │       ├── README.md     # 이슈 인덱스 (분류별 목록)
 │       ├── TEMPLATE.md   # 이슈 파일 작성 템플릿
@@ -89,6 +90,7 @@ baekmi_api/
 
 - **지도**: `flutter_naver_map` 사용. 자세한 연동 방법 → [docs/flutter-naver-map.md](./docs/flutter-naver-map.md)
 - **위치**: `geolocator` 사용. 자세한 구현 방법 → [docs/flutter-geolocation.md](./docs/flutter-geolocation.md)
+- **백엔드 연동**: MVVM(Provider) 구조로 `dio`를 통해 `POST /locations` 호출, userId는 `shared_preferences`에 보관한 클라이언트 생성 UUID. 설계 및 구현 → [docs/app-location-sync.md](./docs/app-location-sync.md)
 
 ### 실행
 
@@ -100,6 +102,7 @@ flutter run
 ### 코드 컨벤션
 
 - `var` 키워드 사용 금지 — `final`/`const`의 타입 추론은 허용, 재할당 가능한 변수는 명시적 타입 선언
+- 새 기능은 **MVVM** 구조를 따른다 (Provider + ChangeNotifier). `models/`(데이터) · `services/`(외부 시스템 저수준 래퍼, 서로 모름) · `repositories/`(service 조합 도메인 로직)가 Model, `providers/`가 ViewModel(상태 보유, Widget/BuildContext를 모름), `pages/`가 View(ViewModel을 구독해 화면만 갱신, 비즈니스 로직 없음). 자세한 예시 → [docs/app-location-sync.md](./docs/app-location-sync.md)
 
 ### 디렉토리 구조
 
@@ -107,10 +110,11 @@ flutter run
 baekmi_app/
 ├── lib/
 │   ├── main.dart
-│   ├── pages/
-│   │   └── map_page.dart
-│   └── services/
-│       └── location_service.dart
+│   ├── models/        # Model — 데이터 구조 (LocationPayload 등)
+│   ├── services/      # Model — 외부 시스템 저수준 래퍼 (geolocator/shared_preferences/dio)
+│   ├── repositories/  # Model — service 조합 도메인 로직
+│   ├── providers/     # ViewModel — ChangeNotifier 상태 보유
+│   └── pages/         # View — map_page.dart
 ├── android/
 ├── ios/
 └── pubspec.yaml
