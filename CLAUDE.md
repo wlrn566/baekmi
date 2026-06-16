@@ -13,6 +13,7 @@ baekmi/
 │   ├── flutter-naver-map.md       # 네이버 지도 SDK 연동 가이드
 │   ├── flutter-geolocation.md     # 위치 조회/추적 구현 가이드
 │   ├── api-location-endpoint.md   # 위치 데이터 수신 API 설계
+│   ├── redis-location-store.md    # Redis 기반 위치 저장/조회 설계
 │   └── issues/
 │       ├── README.md     # 이슈 인덱스 (분류별 목록)
 │       ├── TEMPLATE.md   # 이슈 파일 작성 템플릿
@@ -59,6 +60,7 @@ npm run start:dev
 ### 주요 기능
 
 - **위치 데이터 수신**: 앱이 보낸 좌표를 받아 PostgreSQL(Prisma)에 저장. 설계 결정 및 구현 구조 → [docs/api-location-endpoint.md](./docs/api-location-endpoint.md)
+- **Redis 기반 위치 저장/조회**: 같은 요청에서 Redis GEO에도 dual-write, `GET /locations/:userId`로 조회, Cron으로 만료 정리. 설계 및 구현 → [docs/redis-location-store.md](./docs/redis-location-store.md)
 
 ### 디렉토리 구조
 
@@ -66,7 +68,8 @@ npm run start:dev
 baekmi_api/
 ├── src/
 │   ├── prisma/       # PrismaModule, PrismaService
-│   ├── locations/    # 위치 데이터 수신 (LocationsModule/Controller/Service, dto)
+│   ├── redis/        # RedisModule, RedisService (ioredis 클라이언트)
+│   ├── locations/    # 위치 데이터 수신/조회 (Controller/Service, Cron 정리, dto)
 │   ├── app.module.ts
 │   └── main.ts
 ├── prisma/
@@ -132,6 +135,7 @@ cp .env.example .env
 필요한 환경변수:
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`
+- `REDIS_HOST`, `REDIS_PORT`
 - `PORT`, `DATABASE_URL`
 
 ### Dockerfile.dev
@@ -152,7 +156,9 @@ cp .env.example .env
 ## 워크플로우
 
 1. 작업 브랜치 생성 (`feat/api-location-save`, `fix/app-gps-crash` 등)
-2. 작업 후 커밋 (커밋 컨벤션 준수)
+2. 커밋 전에 변경 사항과 관련된 `CLAUDE.md`/`docs/*.md`를 훑어보고 최신화한다 (디렉토리 구조, 주요 기능 설명, 설계 문서 등 코드와 어긋난 부분이 있는지 확인)
+3. 커밋 (커밋 컨벤션 준수)
+4. PR 생성 시 `.github/PULL_REQUEST_TEMPLATE.md` 형식을 그대로 따른다 (`gh pr create --body`로 임의 형식을 넘기지 말 것 — 템플릿이 무시된다)
 
 브랜치 네이밍 및 커밋 컨벤션 → [docs/commit-convention.md](./docs/commit-convention.md)
 
