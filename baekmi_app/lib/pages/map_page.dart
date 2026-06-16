@@ -1,11 +1,9 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 
-import '../services/location_service.dart';
+import '../providers/location_provider.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -21,45 +19,30 @@ class _MapPageState extends State<MapPage> {
   // 현재 위치를 지도에 표시하는 내장 오버레이 (파란 점)
   NLocationOverlay? _locationOverlay;
 
-  // dispose 시 명시적으로 cancel 해야 메모리 누수 및 불필요한 이벤트 처리를 막을 수 있음
-  StreamSubscription<Position>? _positionSubscription;
-
   // onMapReady 이전에 위치를 수신한 경우 지도 준비 후 적용하기 위해 버퍼링
   Position? _pendingPosition;
+
+  late LocationProvider _locationProvider;
 
   @override
   void initState() {
     super.initState();
-    _initLocation();
+    // listen: false — initState에서는 위젯이 아직 빌드 트리에 없어 watch를 쓸 수 없다.
+    _locationProvider = context.read<LocationProvider>()..addListener(_onLocationChanged);
+    _locationProvider.init();
   }
 
-  /// 권한 확인 → 현재 위치로 카메라 이동 → 실시간 추적 시작 순으로 초기화한다.
-  /// 각 await 이후 mounted를 확인해 dispose된 위젯에 접근하는 것을 방지한다.
-  /// iOS는 Info.plist 설정이 없어 위치 기능 미지원 — Android에서만 실행한다.
-  Future<void> _initLocation() async {
-    if (!Platform.isAndroid) return;
-    try {
-      await LocationService.ensurePermission();
-      if (!mounted) return;
-
-      // 초기 카메라 위치 설정을 위해 현재 위치를 1회 조회
-      final position = await LocationService.getCurrentPosition();
-      if (!mounted) return;
+  /// LocationProvider의 상태(position/errorMessage)가 바뀔 때마다 호출된다.
+  /// View는 ViewModel이 들고 있는 상태를 화면에 반영하는 역할만 한다.
+  void _onLocationChanged() {
+    final position = _locationProvider.position;
+    if (position != null) {
       _moveCamera(position);
+    }
 
-      // 이후 이동 시 지도 카메라가 따라오도록 스트림 구독
-      _positionSubscription =
-          LocationService.getPositionStream().listen(_moveCamera);
-    } catch (e) {
-      // 권한 거부, 위치 서비스 비활성화 등 사용자 조치가 필요한 경우 메시지로 안내
-      // e.toString()은 "Exception: ..." 형태이므로 프리픽스를 제거해 사용자에게 노출
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-          ),
-        );
-      }
+    final errorMessage = _locationProvider.errorMessage;
+    if (errorMessage != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
     }
   }
 
@@ -83,9 +66,9 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
-    // 페이지가 사라질 때 위치 스트림 구독을 해제하지 않으면
-    // 백그라운드에서도 GPS가 계속 작동해 배터리를 소모함
-    _positionSubscription?.cancel();
+    // Provider 자체는 main.dart의 ChangeNotifierProvider가 소유하므로 여기서 dispose하지 않고,
+    // 이 위젯이 등록한 리스너만 해제한다.
+    _locationProvider.removeListener(_onLocationChanged);
     super.dispose();
   }
 

@@ -169,11 +169,11 @@ GEOPOS locations:geo {userId}
 
 → **대응**: `LocationsService.upsertLocation`에서 `redis.client.multi().geoadd(...).zadd(...).exec()`로 두 명령을 원자적으로 묶었다.
 
-### 2. 인증 없는 `GET /locations/:userId`의 노출 문제 (우선순위 높음) — 미해결
+### 2. 인증 없는 `GET /locations/:userId`의 노출 문제 (우선순위 높음) — 계획 수립됨
 
 `userId`는 인증된 식별자가 아니라 클라이언트가 생성한 UUID일 뿐이다. 이 UUID를 아는(또는 다른 응답에서 노출되거나 추측되는) 누구나 해당 사용자의 실시간 좌표를 조회할 수 있게 된다.
 
-→ **대응**: 인증 도입 전까지는 이 엔드포인트의 노출 범위를 의도적으로 제한하거나(예: 내부 전용, rate limit), 인증 도입 시점에 "본인 또는 반경 내 사용자만 조회 가능"하도록 접근 제어를 추가해야 한다.
+→ **대응**: JWT 인증 도입 시 해결할 계획. `User` 테이블을 신설해 `Location.userId`를 인증된 `User.id`로 교체하고, 인증 가드로 본인 확인 후에만 조회 가능하도록 제한한다. 자세한 계획 → [docs/api-location-endpoint.md](./api-location-endpoint.md)의 "사용자 식별" 섹션.
 
 ### 3. Postgres-Redis dual-write 불일치 — 미해결
 

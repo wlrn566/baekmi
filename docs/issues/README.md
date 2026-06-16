@@ -24,3 +24,9 @@
 | 번호 | 제목 |
 |------|------|
 | [ISSUE-007](./ISSUE-007-prisma-schema-change-nodemon-crash.md) | Prisma 스키마 변경 후 실행 중인 프로세스가 stale Prisma Client를 참조 |
+
+## Flutter
+
+| 번호 | 제목 |
+|------|------|
+| [ISSUE-008](./ISSUE-008-geolocator-stream-duplicate-first-event.md) | geolocator 스트림 구독 시 첫 이벤트로 동일 GPS 픽스 중복 수신 |
