@@ -18,3 +18,9 @@
 | [ISSUE-004](./ISSUE-004-redis-geoadd-order.md) | GEOADD 인자 순서 혼동 (경도 → 위도) |
 | [ISSUE-005](./ISSUE-005-redis-user-location-residue.md) | 퇴장한 유저 위치 데이터 잔류 |
 | [ISSUE-006](./ISSUE-006-redis-geosearch-self-include.md) | GEOSEARCH 결과에 자기 자신 포함 |
+
+## NestJS
+
+| 번호 | 제목 |
+|------|------|
+| [ISSUE-007](./ISSUE-007-prisma-schema-change-nodemon-crash.md) | Prisma 스키마 변경 후 실행 중인 프로세스가 stale Prisma Client를 참조 |
