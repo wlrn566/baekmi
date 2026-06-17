@@ -20,6 +20,8 @@ export class LocationsCleanupService {
   // 즉 "매 30초마다(0초, 30초 시점에)" 실행한다는 뜻.
   @Cron('*/30 * * * * *')
   async removeStaleLocations() {
+    this.logger.debug('위치 만료 정리 실행');
+
     // 1. 앱 서버 시각이 아니라 Redis 서버 시각을 기준으로 삼는다 (인스턴스 간 clock skew 방지).
     const [seconds] = await this.redis.client.time();
 

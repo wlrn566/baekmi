@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { LOCATIONS_GEO_KEY, LOCATIONS_LAST_SEEN_KEY } from './locations.constants';
+import {
+  LOCATIONS_GEO_KEY,
+  LOCATIONS_LAST_SEEN_KEY,
+} from './locations.constants';
 
 @Injectable()
 export class LocationsService {
@@ -45,13 +48,34 @@ export class LocationsService {
     return location;
   }
 
-  // Redis에서 조회한다 (Postgres가 아님).
-  // 만료된 사용자는 Cron이 Redis에서 지우므로, 여기서 없으면 "현재는 휴면/이탈 상태"로 판단할 수 있다.
-  async getLocation(userId: string) {
+  // GEOSEARCH로 반경 내 사용자 목록을 반환한다.
+  // FROMMEMBER 대신 FROMLONLAT을 쓰는 이유: FROMMEMBER는 대상 멤버가 없을 때 Redis 에러를 던지므로
+  // catch로 모든 에러를 삼켜야 하는데, 이러면 Redis 장애/타임아웃도 "아무도 없음"으로 오인된다.
+  // GEOPOS로 기준 좌표를 먼저 확인 → 없으면 빈 배열 반환 / 있으면 FROMLONLAT으로 GEOSEARCH.
+  // ioredis 5의 geosearch() 타입 오버로드가 WITHDIST+WITHCOORD 조합을 커버하지 않아
+  // as any로 우회 후 결과를 직접 파싱한다 (docs/api-nearby-search.md 참고).
+  async getNearbyLocations(userId: string, radius: number) {
     const [position] = await this.redis.client.geopos(LOCATIONS_GEO_KEY, userId);
-    if (!position) return null;
+    if (!position) return [];
 
     const [longitude, latitude] = position;
-    return { longitude: Number(longitude), latitude: Number(latitude) };
+    const raw = await (this.redis.client as any)
+      .geosearch(
+        LOCATIONS_GEO_KEY,
+        'FROMLONLAT', longitude, latitude,
+        'BYRADIUS', radius, 'm',
+        'ASC', 'COUNT', 100,
+        'WITHDIST', 'WITHCOORD',
+      ) as [string, string, [string, string]][];
+
+    // FROMLONLAT 기반이어도 동일 좌표의 본인이 포함될 수 있으므로 명시적으로 제외한다 (ISSUE-006).
+    return raw
+      .filter(([memberId]) => memberId !== userId)
+      .map(([memberId, distance, [lon, lat]]) => ({
+        userId: memberId,
+        latitude: Number(lat),
+        longitude: Number(lon),
+        distance: Number(distance),
+      }));
   }
 }
