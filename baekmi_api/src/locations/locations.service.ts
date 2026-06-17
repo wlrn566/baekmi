@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { LOCATIONS_GEO_KEY, LOCATIONS_LAST_SEEN_KEY } from './locations.constants';
+import {
+  LOCATIONS_GEO_KEY,
+  LOCATIONS_LAST_SEEN_KEY,
+} from './locations.constants';
 
 @Injectable()
 export class LocationsService {
@@ -45,13 +48,29 @@ export class LocationsService {
     return location;
   }
 
-  // Redis에서 조회한다 (Postgres가 아님).
-  // 만료된 사용자는 Cron이 Redis에서 지우므로, 여기서 없으면 "현재는 휴면/이탈 상태"로 판단할 수 있다.
-  async getLocation(userId: string) {
-    const [position] = await this.redis.client.geopos(LOCATIONS_GEO_KEY, userId);
-    if (!position) return null;
+  // GEOSEARCH로 반경 내 사용자 목록을 반환한다.
+  // ioredis 5의 geosearch() 타입 오버로드가 WITHDIST+WITHCOORD 조합을 커버하지 않아
+  // as any로 우회 후 결과를 직접 파싱한다 (docs/api-nearby-search.md 참고).
+  async getNearbyLocations(userId: string, radius: number) {
+    const raw = await (this.redis.client as any)
+      .geosearch(
+        LOCATIONS_GEO_KEY,
+        'FROMMEMBER', userId,
+        'BYRADIUS', radius, 'm',
+        'ASC', 'COUNT', 100,
+        'WITHDIST', 'WITHCOORD',
+      )
+      .catch(() => []) as [string, string, [string, string]][];
 
-    const [longitude, latitude] = position;
-    return { longitude: Number(longitude), latitude: Number(latitude) };
+    // GEOSEARCH FROMMEMBER는 자기 자신(거리 0)을 결과에 포함하므로 명시적으로 제외한다 (ISSUE-006).
+    return raw
+      .filter(([memberId]) => memberId !== userId)
+      .map(([memberId, distance, [longitude, latitude]]) => ({
+        userId: memberId,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        distance: Number(distance),
+      }))
+    ;
   }
 }

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { LocationsModule } from './locations/locations.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { LocationsModule } from './locations/locations.module';
     PrismaModule,
     RedisModule,
     LocationsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

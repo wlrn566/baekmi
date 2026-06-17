@@ -247,7 +247,10 @@ docker-compose exec redis redis-cli ZREM locations:geo {userId}
 docker-compose exec redis redis-cli ZREM locations:last_seen {userId}
 ```
 
-## 다음 단계 (이번 범위 아님)
+## 다음 단계 → 완료
 
-- `GEOSEARCH ... FROM MEMBER`로 반경 검색 시 본인 제외 처리 ([ISSUE-006](./issues/ISSUE-006-redis-geosearch-self-include.md))
-- 반경 검색 API(`GET /locations/nearby?userId=...&radius=...`) 추가
+- `GEOSEARCH ... FROMMEMBER`로 반경 검색 및 본인 제외 처리 ([ISSUE-006](./issues/ISSUE-006-redis-geosearch-self-include.md)) — 완료
+- 반경 검색 API(`GET /locations/nearby?userId=...&radius=...`) — 완료
+- 단건 조회는 `GET /locations/:userId`에서 `GET /users/:userId/location`으로 이동 (UsersModule 신설) — 완료
+
+설계 및 구현 → [docs/api-nearby-search.md](./api-nearby-search.md)

@@ -61,7 +61,8 @@ npm run start:dev
 ### 주요 기능
 
 - **위치 데이터 수신**: 앱이 보낸 좌표를 받아 PostgreSQL(Prisma)에 저장. 설계 결정 및 구현 구조 → [docs/api-location-endpoint.md](./docs/api-location-endpoint.md)
-- **Redis 기반 위치 저장/조회**: 같은 요청에서 Redis GEO에도 dual-write, `GET /locations/:userId`로 조회, Cron으로 만료 정리. 설계 및 구현 → [docs/redis-location-store.md](./docs/redis-location-store.md)
+- **Redis 기반 위치 저장/조회**: 같은 요청에서 Redis GEO에도 dual-write, Cron으로 만료 정리. 설계 및 구현 → [docs/redis-location-store.md](./docs/redis-location-store.md)
+- **주변 사람 조회**: `GET /locations/nearby`로 반경 N미터 내 사용자 목록 반환, `GET /users/:userId/location`으로 단건 조회. 설계 및 구현 → [docs/api-nearby-search.md](./docs/api-nearby-search.md)
 
 ### 디렉토리 구조
 
@@ -70,7 +71,8 @@ baekmi_api/
 ├── src/
 │   ├── prisma/       # PrismaModule, PrismaService
 │   ├── redis/        # RedisModule, RedisService (ioredis 클라이언트)
-│   ├── locations/    # 위치 데이터 수신/조회 (Controller/Service, Cron 정리, dto)
+│   ├── locations/    # 위치 데이터 수신/반경 검색 (Controller/Service, Cron 정리, dto)
+│   ├── users/        # 사용자 단건 위치 조회 (Controller/Service)
 │   ├── app.module.ts
 │   └── main.ts
 ├── prisma/
