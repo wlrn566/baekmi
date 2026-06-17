@@ -56,7 +56,7 @@ src/users/
 ### 동작
 
 ```
-GET /users/{userId}
+GET /users/{userId}/location
        ↓
 UsersController.findLocation(userId)
        ↓
