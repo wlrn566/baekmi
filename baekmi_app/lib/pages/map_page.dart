@@ -28,6 +28,9 @@ class _MapPageState extends State<MapPage> {
 
   NCircleOverlay? _radiusCircle;
 
+  // 매 폴링마다 fromWidget 래스터라이즈를 반복하지 않도록 최초 1회만 생성해 재사용한다.
+  NOverlayImage? _markerIcon;
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +38,8 @@ class _MapPageState extends State<MapPage> {
     _locationProvider = context.read<LocationProvider>()..addListener(_onLocationChanged);
     _locationProvider.init();
 
-    _nearbyProvider = context.read<NearbyProvider>()..addListener(_onNearbyUsersChanged);
+    // addListener는 VoidCallback(void Function())을 기대하므로 async 메서드를 직접 넘기지 않는다.
+    _nearbyProvider = context.read<NearbyProvider>()..addListener(_nearbyUsersListener);
     _nearbyProvider.init();
   }
 
@@ -53,6 +57,9 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// addListener가 기대하는 VoidCallback 래퍼 — async 메서드를 직접 넘기면 타입 불일치가 발생한다.
+  void _nearbyUsersListener() => _onNearbyUsersChanged();
+
   /// 주변 사람 목록이 바뀔 때마다 마커를 전체 교체한다.
   /// clearOverlays(marker 타입)는 NLocationOverlay(파란 점)에 영향을 주지 않는다.
   /// clearOverlays는 fromWidget await 이후에 호출해 아이콘 렌더링 시간 동안 깜빡임을 막는다.
@@ -64,7 +71,7 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    final icon = await NOverlayImage.fromWidget(
+    _markerIcon ??= await NOverlayImage.fromWidget(
       widget: SizedBox(
         width: 32,
         height: 32,
@@ -92,6 +99,7 @@ class _MapPageState extends State<MapPage> {
     );
 
     if (!mounted) return;
+    final icon = _markerIcon!;
 
     final markers = _nearbyProvider.nearbyUsers
         .map((u) => NMarker(id: u.userId, position: NLatLng(u.latitude, u.longitude))
@@ -143,7 +151,7 @@ class _MapPageState extends State<MapPage> {
     // Provider 자체는 main.dart의 ChangeNotifierProvider가 소유하므로 여기서 dispose하지 않고,
     // 이 위젯이 등록한 리스너만 해제한다.
     _locationProvider.removeListener(_onLocationChanged);
-    _nearbyProvider.removeListener(_onNearbyUsersChanged);
+    _nearbyProvider.removeListener(_nearbyUsersListener);
     super.dispose();
   }
 

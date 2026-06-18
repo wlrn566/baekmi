@@ -68,15 +68,17 @@ main.dart
        └─ NearbyProvider            (신규)
 
 MapPage.initState()
-  ├─ context.read<LocationProvider>()..addListener(_onLocationChanged)  (기존)
-  └─ context.read<NearbyProvider>()..addListener(_onNearbyUsersChanged) (신규)
+  ├─ context.read<LocationProvider>()..addListener(_onLocationChanged)   (기존)
+  └─ context.read<NearbyProvider>()..addListener(_nearbyUsersListener)   (신규)
        └─ provider.init()
 
 NearbyProvider.init()                                ← ViewModel
+  ├─ 기존 타이머 취소 (중복 호출 방어)
   ├─ fetchNearby() 즉시 1회 호출
   └─ Timer.periodic(5초) 시작 → 매 5초마다 fetchNearby()
 
 NearbyProvider.fetchNearby()
+  ├─ _isFetching == true → return (동시 요청 차단, 응답 순서 역전 방지)
   └─ NearbyRepository.fetchNearby()                 ← Model
        ├─ UserIdService.getOrCreate()                ← Model(Service)
        └─ NearbyApiService.fetchNearby(userId)       ← Model(Service)
@@ -84,14 +86,16 @@ NearbyProvider.fetchNearby()
   ├─ 성공: nearbyUsers = result; notifyListeners()   → View에 통지
   └─ 실패: debugPrint만 (마지막 성공 목록 유지)
 
+MapPage._nearbyUsersListener()  (VoidCallback 래퍼 — addListener 타입 요구사항)
+  └─ _onNearbyUsersChanged() 호출
+
 MapPage._onNearbyUsersChanged()  (notifyListeners()로 트리거)  ← View
   ├─ _mapController == null → return (지도 미준비, 다음 폴링에서 처리)
-  ├─ controller.clearOverlays(type: NOverlayType.marker)
+  ├─ nearbyUsers 비어있으면 → clearOverlays 후 return
+  ├─ _markerIcon ??= NOverlayImage.fromWidget(...) await  (최초 1회만 래스터라이즈, 이후 캐시 재사용)
+  ├─ controller.clearOverlays(type: NOverlayType.marker)  (await 이후에 clear → 깜빡임 방지)
   └─ controller.addOverlayAll(
-         nearbyUsers.map((u) => NMarker(
-           id: u.userId,
-           position: NLatLng(u.latitude, u.longitude),
-         )).toSet()
+         nearbyUsers.map((u) => NMarker(...)..setIcon(_markerIcon!)).toSet()
        )
 ```
 
@@ -140,20 +144,26 @@ class NearbyApiService {
 class NearbyProvider extends ChangeNotifier {
   final NearbyRepository _repository = NearbyRepository();
   Timer? _timer;
+  bool _isFetching = false;
 
   List<NearbyUser> nearbyUsers = [];
 
   void init() {
+    _timer?.cancel(); // 중복 호출 시 기존 타이머 취소
     _fetchNearby();
     _timer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchNearby());
   }
 
   Future<void> _fetchNearby() async {
+    if (_isFetching) return; // 동시 요청 차단
+    _isFetching = true;
     try {
       nearbyUsers = await _repository.fetchNearby();
       notifyListeners();
     } catch (e) {
       if (kDebugMode) debugPrint('[NearbyProvider] 조회 실패: $e');
+    } finally {
+      _isFetching = false;
     }
   }
 
@@ -167,22 +177,34 @@ class NearbyProvider extends ChangeNotifier {
 
 **`pages/map_page.dart` — 추가되는 부분**
 ```dart
+NOverlayImage? _markerIcon; // 최초 1회만 래스터라이즈, 이후 재사용
+
 // initState에서 추가
-_nearbyProvider = context.read<NearbyProvider>()..addListener(_onNearbyUsersChanged);
+// addListener는 VoidCallback을 기대하므로 async 메서드를 직접 넘기지 않는다.
+_nearbyProvider = context.read<NearbyProvider>()..addListener(_nearbyUsersListener);
 _nearbyProvider.init();
 
+// VoidCallback 래퍼
+void _nearbyUsersListener() => _onNearbyUsersChanged();
+
 // 새 콜백
-void _onNearbyUsersChanged() {
+Future<void> _onNearbyUsersChanged() async {
   if (_mapController == null) return;
-  _mapController!.clearOverlays(type: NOverlayType.marker);
-  final markers = _nearbyProvider.nearbyUsers.map((u) =>
-    NMarker(id: u.userId, position: NLatLng(u.latitude, u.longitude))
-  ).toSet();
-  if (markers.isNotEmpty) _mapController!.addOverlayAll(markers);
+  if (_nearbyProvider.nearbyUsers.isEmpty) {
+    _mapController!.clearOverlays(type: NOverlayType.marker);
+    return;
+  }
+  _markerIcon ??= await NOverlayImage.fromWidget(...);
+  if (!mounted) return;
+  final markers = _nearbyProvider.nearbyUsers
+      .map((u) => NMarker(id: u.userId, position: NLatLng(u.latitude, u.longitude))..setIcon(_markerIcon!))
+      .toSet();
+  _mapController!.clearOverlays(type: NOverlayType.marker); // await 이후 clear → 깜빡임 방지
+  _mapController!.addOverlayAll(markers);
 }
 
 // dispose에서 추가
-_nearbyProvider.removeListener(_onNearbyUsersChanged);
+_nearbyProvider.removeListener(_nearbyUsersListener);
 ```
 
 ## 테스트 데이터 삽입
