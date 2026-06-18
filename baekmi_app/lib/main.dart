@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'pages/map_page.dart';
 import 'providers/location_provider.dart';
+import 'providers/nearby_provider.dart';
 import 'services/dio_client.dart';
 
 void main() async {
@@ -23,8 +24,11 @@ class BaekmiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LocationProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => NearbyProvider()),
+      ],
       child: MaterialApp(
         title: '백미',
         theme: ThemeData(

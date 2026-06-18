@@ -64,6 +64,7 @@ npm run start:dev
 - **Redis 기반 위치 저장/조회**: 같은 요청에서 Redis GEO에도 dual-write, Cron으로 만료 정리. 설계 및 구현 → [docs/redis-location-store.md](./docs/redis-location-store.md)
 - **주변 사람 조회**: `GET /locations/nearby`로 반경 N미터 내 사용자 목록 반환, `GET /users/:userId/location`으로 단건 조회. 설계 및 구현 → [docs/api-nearby-search.md](./docs/api-nearby-search.md)
 - **응답 형식 통일**: 모든 엔드포인트가 `{ success, data, message }` 구조로 응답. 전역 인터셉터/필터로 자동 적용 → [docs/api-response-format.md](./docs/api-response-format.md)
+- **주변 사람 마커 표시**: `GET /locations/nearby`를 5초 폴링해 반경 100m 내 사용자를 지도 마커로 표시. 설계 및 구현 → [docs/app-nearby-markers.md](./docs/app-nearby-markers.md)
 
 ### 디렉토리 구조
 
