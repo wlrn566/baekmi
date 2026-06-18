@@ -2,7 +2,7 @@
 
 지도 위에 반경 100m 이내 사용자의 위치를 마커로 표시하기 위한 설계와 구현 내용을 정리한다.
 
-## 구현 상태: 미구현
+## 구현 상태: 완료
 
 ## 배경
 
@@ -183,6 +183,79 @@ void _onNearbyUsersChanged() {
 
 // dispose에서 추가
 _nearbyProvider.removeListener(_onNearbyUsersChanged);
+```
+
+## 테스트 데이터 삽입
+
+실제로 주변에 다른 사용자가 없을 때 `POST /locations`로 가짜 데이터를 직접 삽입해 마커를 확인할 수 있다.
+
+### 100m 이내 좌표 계산법
+
+위도/경도 1도가 실제 거리로 환산되는 값을 이용한다.
+
+```
+위도 1° ≈ 111,000m  →  1m ≈ 0.000009°
+경도 1° ≈ 111,000 × cos(위도) m
+         (위도 37.5° 기준: 1° ≈ 88,000m)  →  1m ≈ 0.0000114°
+```
+
+**오프셋 기준표 (위도 37.5° 근처)**
+
+| 거리 | 위도 오프셋 | 경도 오프셋 |
+|------|------------|------------|
+| 50m  | ±0.00045° | ±0.00057° |
+| 100m | ±0.00090° | ±0.00114° |
+| 200m | ±0.00180° | ±0.00228° |
+
+100m 이내로 넣으려면 위도 오프셋을 `±0.00090` 미만, 경도 오프셋을 `±0.00114` 미만으로 설정한다.
+
+### 주의사항
+
+`GET /locations/nearby`는 `GEOSEARCH FROMMEMBER`를 사용하므로 **내 userId도 Redis에 있어야** 조회가 동작한다. 앱이 5분 이상 정지 상태이면 내 위치가 Redis TTL(300초)로 만료된다. 이 경우 내 위치도 함께 삽입해야 한다.
+
+### 삽입 예시
+
+내 위치가 `latitude: 37.5235634, longitude: 126.8992467`일 때:
+
+```bash
+# Git Bash / macOS Terminal 에서 실행
+
+# 내 위치 (앱이 전송 중이면 생략 가능)
+curl -X POST http://localhost:4001/locations \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"<내-userId>","latitude":37.5235634,"longitude":126.8992467,"accuracy":20.0}'
+
+# 100m 이내 — 북쪽 약 44m (위도 +0.00040)
+curl -X POST http://localhost:4001/locations \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa","latitude":37.5239634,"longitude":126.8992467,"accuracy":5.0}'
+
+# 100m 이내 — 동쪽 약 44m (경도 +0.00050)
+curl -X POST http://localhost:4001/locations \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb","latitude":37.5235634,"longitude":126.8997467,"accuracy":5.0}'
+
+# 100m 밖 — 북쪽 약 200m (위도 +0.00180)
+curl -X POST http://localhost:4001/locations \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","latitude":37.5253634,"longitude":126.8992467,"accuracy":5.0}'
+```
+
+> **Windows PowerShell** 에서는 `curl` 대신 `Invoke-RestMethod`를 사용한다.
+> ```powershell
+> Invoke-RestMethod -Method Post -Uri "http://localhost:4001/locations" `
+>   -ContentType "application/json" `
+>   -Body '{"userId":"aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa","latitude":37.5239634,"longitude":126.8992467,"accuracy":5.0}'
+> ```
+
+### 확인 방법
+
+```bash
+# 반경 조회 결과 확인 (100m 이내 사용자만 반환되어야 함)
+curl "http://localhost:4001/locations/nearby?userId=<내-userId>"
+
+# Redis에 저장된 전체 멤버 확인
+docker-compose exec redis redis-cli ZRANGE locations:geo 0 -1
 ```
 
 ## 다음 단계 (이번 범위 아님)

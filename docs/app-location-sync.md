@@ -166,4 +166,4 @@ API_BASE_URL=http://10.0.2.2:4001
 ## 다음 단계 (이번 범위 아님)
 
 - 인증(JWT) 도입 시 `userId`를 인증된 `User.id`로 교체 ([docs/api-location-endpoint.md](./api-location-endpoint.md) 참고)
-- `GET /locations/:userId` 또는 반경 검색 API를 쓰는 "주변 사람 조회" 화면
+- `GET /locations/:userId` 또는 반경 검색 API를 쓰는 "주변 사람 조회" 화면 → 완료 ([docs/app-nearby-markers.md](./app-nearby-markers.md))
