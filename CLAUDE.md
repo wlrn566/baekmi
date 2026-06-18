@@ -15,6 +15,9 @@ baekmi/
 │   ├── api-location-endpoint.md   # 위치 데이터 수신 API 설계
 │   ├── redis-location-store.md    # Redis 기반 위치 저장/조회 설계
 │   ├── app-location-sync.md       # 플러터 위치 데이터 연동 설계
+│   ├── api-nearby-search.md       # 주변 사람 조회 API 설계
+│   ├── api-response-format.md     # 전역 응답 형식 설계
+│   ├── app-nearby-markers.md      # 주변 사람 마커 표시 설계
 │   └── issues/
 │       ├── README.md     # 이슈 인덱스 (분류별 목록)
 │       ├── TEMPLATE.md   # 이슈 파일 작성 템플릿
@@ -64,6 +67,7 @@ npm run start:dev
 - **Redis 기반 위치 저장/조회**: 같은 요청에서 Redis GEO에도 dual-write, Cron으로 만료 정리. 설계 및 구현 → [docs/redis-location-store.md](./docs/redis-location-store.md)
 - **주변 사람 조회**: `GET /locations/nearby`로 반경 N미터 내 사용자 목록 반환, `GET /users/:userId/location`으로 단건 조회. 설계 및 구현 → [docs/api-nearby-search.md](./docs/api-nearby-search.md)
 - **응답 형식 통일**: 모든 엔드포인트가 `{ success, data, message }` 구조로 응답. 전역 인터셉터/필터로 자동 적용 → [docs/api-response-format.md](./docs/api-response-format.md)
+- **주변 사람 마커 표시**: `GET /locations/nearby`를 5초 폴링해 반경 100m 내 사용자를 지도 마커로 표시. 설계 및 구현 → [docs/app-nearby-markers.md](./docs/app-nearby-markers.md)
 
 ### 디렉토리 구조
 
@@ -95,6 +99,7 @@ baekmi_api/
 - **지도**: `flutter_naver_map` 사용. 자세한 연동 방법 → [docs/flutter-naver-map.md](./docs/flutter-naver-map.md)
 - **위치**: `geolocator` 사용. 자세한 구현 방법 → [docs/flutter-geolocation.md](./docs/flutter-geolocation.md)
 - **백엔드 연동**: MVVM(Provider) 구조로 `dio`를 통해 `POST /locations` 호출, userId는 `shared_preferences`에 보관한 클라이언트 생성 UUID. 설계 및 구현 → [docs/app-location-sync.md](./docs/app-location-sync.md)
+- **주변 사람 마커**: `GET /locations/nearby` 5초 폴링으로 반경 100m 내 사용자를 `NMarker`로 표시. `NCircleOverlay`로 반경 원 시각화. 설계 및 구현 → [docs/app-nearby-markers.md](./docs/app-nearby-markers.md)
 
 ### 실행
 
