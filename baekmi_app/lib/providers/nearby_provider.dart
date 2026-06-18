@@ -14,7 +14,9 @@ class NearbyProvider extends ChangeNotifier {
   List<NearbyUser> nearbyUsers = [];
 
   /// 즉시 1회 조회 후 5초 간격으로 폴링을 시작한다.
+  /// 중복 호출 시 기존 타이머를 먼저 취소해 타이머가 누적되지 않게 한다.
   void init() {
+    _timer?.cancel();
     _fetchNearby();
     _timer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchNearby());
   }

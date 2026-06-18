@@ -55,12 +55,14 @@ class _MapPageState extends State<MapPage> {
 
   /// 주변 사람 목록이 바뀔 때마다 마커를 전체 교체한다.
   /// clearOverlays(marker 타입)는 NLocationOverlay(파란 점)에 영향을 주지 않는다.
+  /// clearOverlays는 fromWidget await 이후에 호출해 아이콘 렌더링 시간 동안 깜빡임을 막는다.
   Future<void> _onNearbyUsersChanged() async {
     if (_mapController == null) return;
 
-    _mapController!.clearOverlays(type: NOverlayType.marker);
-
-    if (_nearbyProvider.nearbyUsers.isEmpty) return;
+    if (_nearbyProvider.nearbyUsers.isEmpty) {
+      _mapController!.clearOverlays(type: NOverlayType.marker);
+      return;
+    }
 
     final icon = await NOverlayImage.fromWidget(
       widget: SizedBox(
@@ -96,6 +98,7 @@ class _MapPageState extends State<MapPage> {
           ..setIcon(icon))
         .toSet();
 
+    _mapController!.clearOverlays(type: NOverlayType.marker);
     _mapController!.addOverlayAll(markers);
   }
 
