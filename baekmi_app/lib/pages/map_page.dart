@@ -58,7 +58,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   /// addListener가 기대하는 VoidCallback 래퍼 — async 메서드를 직접 넘기면 타입 불일치가 발생한다.
-  void _nearbyUsersListener() => _onNearbyUsersChanged();
+  /// Future를 명시적으로 처리해 마커 갱신 중 예외가 unhandled async error로 보고되지 않게 한다.
+  void _nearbyUsersListener() => _onNearbyUsersChanged().catchError((Object e) {
+        if (kDebugMode) debugPrint('[MapPage] 마커 갱신 실패: $e');
+      });
 
   /// 주변 사람 목록이 바뀔 때마다 마커를 전체 교체한다.
   /// clearOverlays(marker 타입)는 NLocationOverlay(파란 점)에 영향을 주지 않는다.
